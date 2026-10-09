@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5fbf6">
+  <title>GreenRoute AI | Sustainable Travel</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <button class="brand" id="brandHome" type="button">
+      <span class="brand-icon">G</span>
+      <span>GreenRoute <em>AI</em></span>
+    </button>
+
+    <button class="profile-button" id="profileButton" type="button" aria-label="Open profile dashboard">
+      <span class="avatar" id="navAvatar">U</span>
+      <span class="profile-label"><strong id="navProfileName">My dashboard</strong><small>Travel profile</small></span>
+      <span class="chevron">↗</span>
+    </button>
+  </header>
+
+  <main>
+    <div class="progress-wrap" id="stepProgress">
+      <div class="progress-caption">
+        <span id="stepLabel">STEP 01 / 05</span>
+        <span id="stepDescription">Plan your journey</span>
+      </div>
+      <div class="progress-track"><div id="progressBar"></div></div>
+    </div>
+
+    <!-- PAGE 1: HOME + MAP -->
+    <section class="page active" id="pageTrip">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">A SMARTER WAY TO MOVE</span>
+          <h1>Explore more.<br><span>Impact less.</span></h1>
+          <p class="muted">Tap the map to choose your starting point and destination.</p>
+        </div>
+        <div class="heading-pill">♧ Travel thoughtfully</div>
+      </div>
+
+      <div class="bento home-grid">
+        <article class="card trip-card">
+          <span class="eyebrow">YOUR NEXT ADVENTURE</span>
+          <h2>Where to next?</h2>
+          <p class="muted small">Search for a place or select it directly on the map.</p>
+
+          <form id="tripForm">
+            <label for="startPlace">Starting point</label>
+            <div class="place-input">
+              <span class="place-dot start-dot"></span>
+              <input id="startPlace" placeholder="Search a starting place" autocomplete="off" required>
+            </div>
+            <button class="pick-button selected" type="button" data-pick="start" id="pickStartButton">＋ Pick start on map</button>
+
+            <label for="destinationPlace" class="destination-label">Destination</label>
+            <div class="place-input">
+              <span class="place-dot end-dot"></span>
+              <input id="destinationPlace" placeholder="Search a destination" autocomplete="off" required>
+            </div>
+            <button class="pick-button" type="button" data-pick="destination" id="pickDestinationButton">＋ Pick destination on map</button>
+
+            <button type="button" class="text-action" id="useCurrentLocation">◎ Use my current location as start</button>
+            <button type="submit" class="btn btn-primary full-width" id="continueTripButton">Continue to preferences <span>↗</span></button>
+          </form>
+          <p id="tripMessage" class="message" role="status"></p>
+
+          <div class="tip-strip">
+            <span>✦</span>
+            <p>Tip: tap “Pick start on map”, then tap your location. Repeat for your destination.</p>
+          </div>
+        </article>
+
+        <article class="card map-card">
+          <div class="card-heading">
+            <div><span class="eyebrow">INTERACTIVE MAP</span><h2>Choose your places</h2></div>
+            <span class="live-pill"><i></i> Live map</span>
+          </div>
+
+          <div class="map-instruction" id="mapInstruction">
+            <span>①</span> Select a starting point on the map
+          </div>
+          <div id="homeMap" class="map home-map" aria-label="Interactive location selection map"></div>
+          <div class="map-footer">
+            <span><i class="legend-dot start-dot"></i> Start</span>
+            <span><i class="legend-dot end-dot"></i> Destination</span>
+            <span class="map-source">© OpenStreetMap</span>
+          </div>
+          <p id="homeMapMessage" class="map-note">Map ready. Zoom and tap to select a location.</p>
+        </article>
+
+        <article class="card green-feature">
+          <div class="feature-icon">♧</div>
+          <span class="eyebrow">SMALL CHOICES, BIG IMPACT</span>
+          <h3>Make every journey count.</h3>
+          <p>Compare estimated time, cost and emissions before you go.</p>
+          <div class="feature-tags"><span>Cost</span><span>Time</span><span>CO₂e</span></div>
+        </article>
+
+        <article class="card home-profile-card">
+          <div class="profile-summary">
+            <span class="avatar large" id="homeAvatar">U</span>
+            <div><span class="eyebrow">YOUR PROGRESS</span><h3 id="homeProfileName">Welcome, traveller!</h3></div>
+          </div>
+          <div class="quick-stats">
+            <div><strong id="homePoints">0</strong><span>Green Points</span></div>
+            <div><strong id="homeTrips">0</strong><span>Trips completed</span></div>
+          </div>
+          <button type="button" class="btn btn-outline full-width" id="openDashboardFromHome">Open dashboard ↗</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- PAGE 2: PREFERENCES -->
+    <section class="page" id="pagePreferences">
+      <button class="back-button" type="button" data-back="pageTrip">← Back to homepage</button>
+      <div class="page-heading">
+        <div><span class="eyebrow">STEP 02 · PERSONALISE</span><h1>Your journey.<br><span>Your rules.</span></h1>
+        <p class="muted">Tell us what matters most for this trip.</p></div>
+      </div>
+
+      <div class="bento two-column">
+        <article class="card">
+          <span class="eyebrow">01 / YOUR PRIORITY</span><h2>What matters most?</h2>
+          <div class="priority-options" id="priorityOptions">
+            <button type="button" class="priority-option selected" data-priority="balanced"><span>✳</span><div><strong>Balanced</strong><small>A mix of everything</small></div><b>✓</b></button>
+            <button type="button" class="priority-option" data-priority="eco"><span>♧</span><div><strong>Eco-friendly</strong><small>Lower estimated emissions</small></div><b>✓</b></button>
+            <button type="button" class="priority-option" data-priority="cost"><span>₹</span><div><strong>Save money</strong><small>Keep the trip affordable</small></div><b>✓</b></button>
+            <button type="button" class="priority-option" data-priority="time"><span>◷</span><div><strong>Save time</strong><small>Prefer a shorter journey</small></div><b>✓</b></button>
+          </div>
+        </article>
+
+        <article class="card budget-card">
+          <span class="eyebrow">02 / YOUR BUDGET</span><h2>How much to spend?</h2>
+          <div class="budget-value">₹<strong id="budgetValue">150</strong></div>
+          <input id="budgetSlider" type="range" min="0" max="1000" step="25" value="150">
+          <div class="range-labels"><span>Free</span><span>₹1,000+</span></div>
+          <p class="muted small">Estimated total travel budget.</p>
+        </article>
+
+        <article class="card">
+          <span class="eyebrow">03 / YOUR COMFORT</span><h2>Modes to avoid</h2>
+          <p class="muted small">Choose any travel modes you don't want to use.</p>
+          <div class="avoid-grid">
+            <label class="avoid-option"><input type="checkbox" value="car"><span>🚗</span><strong>Car</strong></label>
+            <label class="avoid-option"><input type="checkbox" value="bus"><span>🚌</span><strong>Bus</strong></label>
+            <label class="avoid-option"><input type="checkbox" value="metro"><span>🚇</span><strong>Metro</strong></label>
+            <label class="avoid-option"><input type="checkbox" value="cycling"><span>🚲</span><strong>Cycling</strong></label>
+            <label class="avoid-option"><input type="checkbox" value="walking"><span>🚶</span><strong>Walking</strong></label>
+          </div>
+          <p id="avoidCounter" class="muted small">0 modes excluded</p>
+        </article>
+
+        <article class="card preference-summary">
+          <span class="eyebrow">YOUR TRAVEL PROFILE</span>
+          <div class="summary-symbol">✳</div>
+          <h3 id="preferenceSummaryTitle">The balanced explorer</h3>
+          <p id="preferenceSummaryText" class="muted">We'll compare cost, travel time and emissions.</p>
+          <button type="button" class="btn btn-primary full-width" id="findRoutesButton">Find my routes ↗</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- PAGE 3: ROUTE OPTIONS -->
+    <section class="page" id="pageRoutes">
+      <button class="back-button" type="button" data-back="pagePreferences">← Back to preferences</button>
+      <div class="page-heading">
+        <div><span class="eyebrow">STEP 03 · YOUR OPTIONS</span><h1>Choose your<br><span>way forward.</span></h1><p id="routeSubheading" class="muted">Compare your options.</p></div>
+      </div>
+
+      <div class="bento two-column">
+        <article class="card map-card">
+          <span class="eyebrow">ROUTE OVERVIEW</span><h2>Your journey</h2>
+          <div id="routeMap" class="map route-map"></div>
+          <div class="map-footer"><span><i class="legend-dot start-dot"></i> Start</span><span><i class="legend-dot end-dot"></i> Destination</span></div>
+        </article>
+
+        <article class="card green-feature recommendation-card">
+          <span class="eyebrow">GREENROUTE RECOMMENDS</span>
+          <div class="feature-icon">♧</div>
+          <h3 id="recommendationTitle">Finding your best fit…</h3>
+          <p id="recommendationText">Your preferences help rank these estimates.</p>
+          <div class="recommendation-footer"><span>Priority</span><strong id="recommendationBadge">Balanced</strong></div>
+        </article>
+
+        <article class="card span-two">
+          <div class="card-heading"><div><span class="eyebrow">COMPARE & DECIDE</span><h2>Travel options</h2></div><span class="step-number">03</span></div>
+          <p class="muted small">Fares, times and emissions are estimates and may vary.</p>
+          <div id="modeCards" class="mode-cards"></div>
+          <p id="routeMessage" class="message" role="status"></p>
+        </article>
+
+        <article class="card impact-card">
+          <span class="eyebrow">POTENTIAL CO₂e SAVED</span>
+          <div class="impact-number"><strong id="impactSaved">0.00</strong><span>kg</span></div>
+          <p class="muted small">Estimated reduction compared with the car baseline.</p>
+          <div class="impact-track"><div id="impactTrack"></div></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- PAGE 4: LIVE TRACKING -->
+    <section class="page" id="pageNavigation">
+      <button class="back-button" type="button" data-back="pageRoutes">← Back to route options</button>
+      <div class="page-heading"><div><span class="eyebrow">STEP 04 · ON YOUR WAY</span><h1>Let's get<br><span>moving.</span></h1><p class="muted">Start GPS tracking when you're ready.</p></div></div>
+
+      <div class="bento two-column">
+        <article class="card navigation-card">
+          <span class="live-pill"><i></i> GPS tracking</span>
+          <div class="navigation-emoji" id="navigationModeIcon">🚶</div>
+          <span class="eyebrow">SELECTED TRAVEL MODE</span>
+          <h2 id="navigationModeTitle">Walking</h2>
+          <p id="navigationRouteText" class="muted small">Your trip is ready.</p>
+          <div class="navigation-metrics">
+            <div><span>Distance remaining</span><strong id="distanceRemaining">--</strong></div>
+            <div><span>GPS accuracy</span><strong id="gpsAccuracy">--</strong></div>
+          </div>
+          <div class="progress-track"><div id="navigationProgress"></div></div>
+          <p id="navigationMessage" class="message" role="status">Press Start tracking to begin.</p>
+          <button type="button" class="btn btn-primary full-width" id="startNavigationButton">Start tracking ↗</button>
+          <button type="button" class="btn btn-danger full-width hidden" id="stopNavigationButton">Stop tracking</button>
+        </article>
+
+        <article class="card map-card">
+          <span class="eyebrow">YOUR LOCATION</span><h2>Live map</h2>
+          <div id="navigationMap" class="map navigation-map"></div>
+          <p class="muted small">GPS position updates while tracking is active.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- PAGE 5: COMPLETION -->
+    <section class="page" id="pageComplete">
+      <button class="back-button" type="button" data-back="pageNavigation">← Back to tracking</button>
+      <article class="card completion-card">
+        <div class="completion-check">✓</div>
+        <span class="eyebrow">JOURNEY COMPLETE</span>
+        <h1 id="completionTitle">You've reached<br><span>your destination!</span></h1>
+        <p id="completionText" class="muted">Great work. Every thoughtful journey counts.</p>
+        <div class="bento completion-stats">
+          <div class="card"><span>Travel mode</span><strong id="completedMode">—</strong></div>
+          <div class="card"><span>Distance</span><strong id="completedDistance">—</strong></div>
+          <div class="card"><span>Estimated CO₂e avoided</span><strong id="completedSavings">—</strong></div>
+          <div class="card points-stat"><span>Green Points earned</span><strong id="completedPoints">+0</strong></div>
+        </div>
+        <div class="completion-actions">
+          <button type="button" class="btn btn-primary" id="planAnotherButton">Plan another trip ↗</button>
+          <button type="button" class="btn btn-outline" id="viewSummaryButton">View trip summary</button>
+          <button type="button" class="btn btn-outline" id="completionDashboardButton">My dashboard</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- PROFILE DASHBOARD -->
+    <section class="page" id="profilePage">
+      <button class="back-button" type="button" id="backFromProfileButton">← Back to planner</button>
+      <div class="page-heading"><div><span class="eyebrow">YOUR GREENROUTE ACCOUNT</span><h1>Your travel.<br><span>Your impact.</span></h1><p class="muted">Your progress and sustainable travel stats.</p></div></div>
+
+      <div class="bento two-column">
+        <article class="card profile-welcome">
+          <div class="profile-summary"><span class="avatar extra-large" id="profileAvatar">U</span><div><span class="eyebrow">TRAVELLER PROFILE</span><h2 id="profileDisplayName">Welcome, traveller!</h2><p id="profileEmailDisplay" class="muted small">Your local profile</p></div></div>
+          <button type="button" class="btn btn-primary" id="editProfileButton">Edit profile ✎</button>
+          <form id="profileEditForm" class="hidden">
+            <label for="profileNameInput">Your name</label><input id="profileNameInput" maxlength="60" required>
+            <label for="profileEmailInput">Email (optional)</label><input id="profileEmailInput" type="email" maxlength="120">
+            <div class="inline-actions"><button class="btn btn-primary" type="submit">Save profile</button><button class="btn btn-outline" id="cancelProfileEdit" type="button">Cancel</button></div>
+          </form>
+          <p id="profileMessage" class="message" role="status"></p>
+        </article>
+
+        <article class="card points-card">
+          <span class="eyebrow">YOUR GREEN POINTS</span>
+          <div class="points-number">♧ <strong id="profilePoints">0</strong></div>
+          <p class="muted small">Points earned from completed journeys.</p>
+          <div class="progress-track"><div id="pointsProgressBar"></div></div>
+          <p id="pointsMilestone" class="muted small">Next milestone: 100 points</p>
+        </article>
+
+        <article class="card dashboard-stat"><span class="eyebrow">TRIPS COMPLETED</span><strong id="profileTrips">0</strong><p class="muted small">Completed trips saved on this device.</p></article>
+        <article class="card dashboard-stat"><span class="eyebrow">ESTIMATED CO₂e SAVED</span><strong id="profileSaved">0.00 kg</strong><p class="muted small">Compared with car baseline estimates.</p></article>
+
+        <article class="card">
+          <div class="card-heading"><div><span class="eyebrow">YOUR ACTIVITY</span><h2>Last 7 days</h2></div><span class="step-number">WEEK</span></div>
+          <div id="profileWeeklyChart" class="weekly-chart"></div>
+          <p id="profileWeeklyTotal" class="muted small">0 trips this week</p>
+        </article>
+
+        <article class="card">
+          <span class="eyebrow">MILESTONES</span><h2>Your achievements</h2>
+          <div id="profileAchievements" class="achievement-list"></div>
+        </article>
+
+        <article class="card span-two">
+          <div class="card-heading"><div><span class="eyebrow">YOUR JOURNEY LOG</span><h2>Recent trips</h2></div><button type="button" id="clearTripsButton" class="text-action">Clear history</button></div>
+          <div id="profileTripHistory" class="trip-history"></div>
+        </article>
+        <article class="card green-feature">
+          <span class="eyebrow">READY TO EXPLORE?</span><h3>Another adventure awaits.</h3><p>Find your next route and keep making thoughtful choices.</p>
+          <button type="button" class="btn btn-primary" id="dashboardPlanTripButton">Plan a new journey ↗</button>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>© GreenRoute AI</span><span>Smarter journeys, lighter footprints.</span></footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
